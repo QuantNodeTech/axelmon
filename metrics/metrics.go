@@ -111,3 +111,66 @@ func SetHeartbeatsCounterMissed(chain, address string, missCnt int) {
 func SetHeartbeatsCounterSuccess(chain, address string, successCnt int) {
 	SetHeartbeats(chain, address, "success", successCnt)
 }
+
+// --- Poll results, signings and check freshness of the monitored account ---
+
+const (
+	LabelKind   = "kind"
+	LabelResult = "result"
+	LabelCheck  = "check"
+)
+
+var (
+	// PollVotesGauge counts the polls of the check window by how the monitored
+	// account behaved in them. Unlike vm_votes_total and evm_votes_total it
+	// compares each vote with the outcome of its poll.
+	PollVotesGauge = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "axelmon_poll_votes",
+			Help: "Polls in the check window by result for the monitored account: agreed, minority, not_voted, late, undecided",
+		},
+		[]string{LabelNetwork, LabelKind, LabelChain, LabelAddress, LabelResult},
+	)
+
+	SigningsGauge = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "axelmon_signings",
+			Help: "Signing sessions in the check window by result for the monitored account: signed, not_signed",
+		},
+		[]string{LabelNetwork, LabelChain, LabelAddress, LabelResult},
+	)
+
+	LastCheckGauge = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "axelmon_last_check_timestamp_seconds",
+			Help: "Unix time of the last check that read all its chains without an error",
+		},
+		[]string{LabelNetwork, LabelCheck},
+	)
+)
+
+func SetPollVotes(network, kind, chain, address, result string, count int) {
+	PollVotesGauge.With(prometheus.Labels{
+		LabelNetwork: network,
+		LabelKind:    kind,
+		LabelChain:   chain,
+		LabelAddress: address,
+		LabelResult:  result,
+	}).Set(float64(count))
+}
+
+func SetSignings(network, chain, address, result string, count int) {
+	SigningsGauge.With(prometheus.Labels{
+		LabelNetwork: network,
+		LabelChain:   chain,
+		LabelAddress: address,
+		LabelResult:  result,
+	}).Set(float64(count))
+}
+
+func SetLastCheck(network, check string) {
+	LastCheckGauge.With(prometheus.Labels{
+		LabelNetwork: network,
+		LabelCheck:   check,
+	}).SetToCurrentTime()
+}

@@ -58,10 +58,15 @@ func main() {
 
 	api.Set(cfg.General.Network, cfg.General.API)
 	log.Info(fmt.Sprintf("Start Axelmon (for %s)", cfg.General.Network))
-	proxyAcc, err := api.C.GetProxyByVal(cfg.Wallet.Validator.PrintValoper())
-	if err != nil {
-		log.Error(err)
-		panic(err)
+	// The legacy REST route behind GetProxyByVal is gone on current nodes, so a
+	// validator sets its broadcaster account in the config.
+	proxyAcc := cfg.General.ProxyAcc
+	if proxyAcc == "" {
+		proxyAcc, err = api.C.GetProxyByVal(cfg.Wallet.Validator.PrintValoper())
+		if err != nil {
+			log.Error(err)
+			panic(err)
+		}
 	}
 
 	if proxyAcc != "" {
@@ -71,7 +76,7 @@ func main() {
 			panic(err)
 		}
 	} else {
-		log.Warn("Cannot fetch proxy acc. it may cause error while retrieving voting infos.")
+		log.Warn("Cannot fetch proxy acc. A validator must set general.proxy_acc, or its votes are looked up under the wrong account.")
 		cfg.Wallet.Proxy = cfg.Wallet.Validator
 		if err != nil {
 			log.Error(err)

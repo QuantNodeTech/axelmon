@@ -61,6 +61,9 @@ func Run(ctx context.Context, c *Config) {
 			case VMVoteTargetSvc:
 				monitoringFuncs = append(monitoringFuncs, c.checkVMVotes)
 				break
+			case VMSigningTargetSvc:
+				monitoringFuncs = append(monitoringFuncs, c.checkVMSignings)
+				break
 			}
 		}
 	}

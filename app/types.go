@@ -20,11 +20,14 @@ func (d *Duration) UnmarshalText(b []byte) error {
 
 type Config struct {
 	General struct {
-		Network              string    `toml:"network"`
-		Period               *Duration `toml:"period"`
-		ExceptChainsString   string    `toml:"except_chains"`
-		ExceptChains         map[string]bool
-		ValidatorAcc         string      `toml:"validator_acc"`
+		Network            string    `toml:"network"`
+		Period             *Duration `toml:"period"`
+		ExceptChainsString string    `toml:"except_chains"`
+		ExceptChains       map[string]bool
+		ValidatorAcc       string `toml:"validator_acc"`
+		// ProxyAcc is the broadcaster account of a validator. When it is set,
+		// the proxy lookup through the API is skipped.
+		ProxyAcc             string      `toml:"proxy_acc"`
 		RPC                  string      `toml:"rpc"`
 		API                  string      `toml:"api"`
 		GRPC                 string      `toml:"grpc"`
@@ -60,6 +63,8 @@ type Config struct {
 		CheckN          int `toml:"check_n"`
 		MissPercentage  int `toml:"miss_percentage"`
 		CheckPeriodDays int `toml:"check_period_days"`
+		// CheckPeriodHours, when set, replaces CheckPeriodDays.
+		CheckPeriodHours int `toml:"check_period_hours"`
 	} `toml:"external_chain_vote"`
 
 	Ctx       context.Context
@@ -75,4 +80,5 @@ const (
 	HeartbeatTargetSvc  TargetSvc = "heartbeat"
 	EVMVoteTargetSvc    TargetSvc = "evm"
 	VMVoteTargetSvc     TargetSvc = "vm"
+	VMSigningTargetSvc  TargetSvc = "vm_signing"
 )

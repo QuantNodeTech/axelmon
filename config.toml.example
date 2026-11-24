@@ -22,6 +22,12 @@ period = 60
 
 validator_acc = "axelar123..."
 
+# Broadcaster (proxy) account of a validator. Set it for a validator: the API route that looked it
+# up is gone on current nodes, and without it the votes are searched under the validator account.
+# Find it with: axelard q snapshot proxy <axelarvaloper...>
+# Leave it out for an amplifier verifier.
+#proxy_acc = "axelar1..."
+
 # Chains you don't want to monitor.
 # If empty, all external votes will be monitored.
 # e.g. "aurora, ethereum"
@@ -35,6 +41,8 @@ grpc_secure_connection = true
 
 listen_port = 8080
 
+# Services: "maintainer", "heartbeat", "evm" (validator polls), "vm" (verifier polls),
+# "vm_signing" (verifier multisig signing sessions).
 target_svcs = ["maintainer", "heartbeat", "evm"]
 
 [alerts]
@@ -68,8 +76,9 @@ miss_cnt = 	2
 
 [external_chain_vote] # external_chain_vote configurations are used to check evm/vm polls.
 
-# The number of votes for each external chain events you want to check.
-check_n = 10
+# The largest number of polls (and signing sessions) to read for each chain, at most 255.
+# Keep it above the number of polls a chain has in the check period, or the oldest are not checked.
+check_n = 100
 
 # this field restrict monitor target period. some chains connected on mainnet/testnet may have low txs.
 # and if votes contain too old vote records when I fetch votes with number of `check_n`, and also invalid vote txs are exists before, monitoring alert may be less trusted.
@@ -77,5 +86,10 @@ check_n = 10
 # `check_period_days` will truncate old records.
 check_period_days = 10
 
+# The same period in hours. When it is set, it replaces `check_period_days`.
+#check_period_hours = 6
+
+# A poll counts as missed when the account voted against the majority, did not vote, or voted late.
+# A "no" vote with a "no" majority is not a miss.
 # If a `missedVotes / totalVotes` is over `miss_percentage` parameter, it'll alert.
 miss_percentage = 20

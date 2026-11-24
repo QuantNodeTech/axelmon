@@ -254,6 +254,36 @@ And `Axelmon` provide the result of monitoring:
     - missed: Miss count for votes.
       - (`miss_cnt` field) / (`check_n` field) in `config.toml`.
 
+## How a vote is judged
+
+For the monitored account, each finished poll of the check period gets one result:
+
+| Result | Meaning |
+| --- | --- |
+| `agreed` | The vote is the same as the majority. A "no" vote with a "no" majority is agreement. |
+| `minority` | The vote is against the majority. |
+| `not_voted` | The account was a participant and sent no vote. |
+| `late` | The vote arrived after the poll completed. |
+| `undecided` | The account voted, but the poll has no clear majority to compare with. |
+
+A side has the majority when the outcome flag of axelarscan says so and more than half of all
+participants voted for it. `minority`, `not_voted` and `late` are the results to alert on:
+
+```
+axelmon_poll_votes{result=~"minority|not_voted|late"} > 0
+axelmon_signings{result="not_signed"} > 0
+time() - axelmon_last_check_timestamp_seconds > 1800
+```
+
+`axelmon_signings` (service `vm_signing`) counts the multisig signing sessions of a verifier as
+`signed` or `not_signed`. `axelmon_last_check_timestamp_seconds` is the time of the last check that
+read all its chains; the other metrics keep their last value when axelarscan cannot be read.
+
+`vm_votes_total` and `evm_votes_total` are kept for existing dashboards. They count every vote that
+is not "yes" as missed and cannot see an account that did not vote. Do not alert on them.
+
+A validator must set `general.proxy_acc` to its broadcaster account.
+
 - Prometheus ( `localhost:${LISTENPORT}/metrics` )
   ```
   # HELP evm_votes_total Number of EVM votes
